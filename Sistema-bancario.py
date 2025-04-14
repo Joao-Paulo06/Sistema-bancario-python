@@ -1,140 +1,132 @@
-class ContaBancaria:
-    def __init__(self, titular, saldo_inicial=0):
-        self.titular = titular
-        self.saldo = saldo_inicial
-        self.extrato = ""
-        self.numero_saques = 0
-        self.limite_saques = 3
-        self.limite = 500
+def depositar(saldo, valor, extrato):
+    
+    if valor > 0:
+        saldo += valor
+        extrato += f"Depósito: R$ {valor:.2f}\n"
+        print("Depósito realizado com sucesso.")
+    else:
+        print("Operação falhou! O valor informado é inválido.")
+    return saldo, extrato
 
-    def depositar(self, valor):
-        if valor > 0:
-            self.saldo += valor
-            self.extrato += f"Depósito: R$ {valor:.2f}\n"
-            print("Depósito realizado com sucesso.")
-        else:
-            print("Operação falhou! O valor informado é inválido.")
+def sacar(saldo, valor, extrato, limite, numero_saques, limite_saques):
+    
+    excedeu_saldo = valor > saldo
+    excedeu_limite = valor > limite
+    excedeu_saques = numero_saques >= limite_saques
 
-    def sacar(self, valor):
-        excedeu_saldo = valor > self.saldo
-        excedeu_limite = valor > self.limite
-        excedeu_saques = self.numero_saques >= self.limite_saques
+    if excedeu_saldo:
+        print("Operação falhou! Você não tem saldo suficiente.")
+    elif excedeu_limite:
+        print("Operação falhou! O valor do saque excede o limite.")
+    elif excedeu_saques:
+        print("Operação falhou! Número máximo de saques excedido.")
+    elif valor > 0:
+        saldo -= valor
+        extrato += f"Saque: R$ {valor:.2f}\n"
+        numero_saques += 1
+        print("Saque realizado com sucesso.")
+    else:
+        print("Operação falhou! O valor informado é inválido.")
+    return saldo, extrato, numero_saques
 
-        if excedeu_saldo:
-            print("Operação falhou! Você não tem saldo suficiente.")
-        elif excedeu_limite:
-            print("Operação falhou! O valor do saque excede o limite.")
-        elif excedeu_saques:
-            print("Operação falhou! Número máximo de saques excedido.")
-        elif valor > 0:
-            self.saldo -= valor
-            self.extrato += f"Saque: R$ {valor:.2f}\n"
-            self.numero_saques += 1
-            print("Saque realizado com sucesso.")
-        else:
-            print("Operação falhou! O valor informado é inválido.")
+def exibir_extrato(saldo, extrato):
+    
+    
+    print("\n================ EXTRATO ================")
+    print("Não foram realizadas movimentações." if not extrato else extrato)
+    print(f"\nSaldo: R$ {saldo:.2f}")
+    print("==========================================")
 
-    def exibir_extrato(self):
-        print("\n================ EXTRATO ================")
-        print(
-            "Não foram realizadas movimentações." if not self.extrato else self.extrato
-        )
-        print(f"\nSaldo: R$ {self.saldo:.2f}")
-        print("==========================================")
+def criar_usuario(usuarios):
+    
+    cpf = input("Informe o CPF do usuário (somente números): ")
+    if any(usuario["cpf"] == cpf for usuario in usuarios):
+        print("Erro: CPF já cadastrado.")
+        return usuarios
+    nome = input("Informe o nome completo: ")
+    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+    endereco = input("Informe o endereço completo (rua, número - bairro - cidade/sigla estado): ")
+    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+    print("Usuário criado com sucesso!")
+    return usuarios
 
-
-class SistemaBancario:
-    def __init__(self):
-        self.contas = []
-
-    def criar_conta(self, titular, saldo_inicial=0):
-        nova_conta = ContaBancaria(titular, saldo_inicial)
-        self.contas.append(nova_conta)
+def criar_conta(agencia, numero_conta, usuarios):
+    
+    cpf = input("Informe o CPF do titular da conta (somente números): ")
+    usuario = next((usuario for usuario in usuarios if usuario["cpf"] == cpf), None)
+    if usuario:
+        conta = {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
         print("Conta criada com sucesso!")
-
-    def listar_contas(self):
-        if not self.contas:
-            print("Nenhuma conta cadastrada.")
-            return
-        print("\n======== Contas Cadastradas ========")
-        for i, conta in enumerate(self.contas):
-            print(f"{i+1}. Titular: {conta.titular}, Saldo: R$ {conta.saldo:.2f}")
-        print("====================================")
-
-    def selecionar_conta(self, titular):
-        for conta in self.contas:
-            if conta.titular.lower() == titular.lower():
-                return conta
-        print("Conta não encontrada.")
+        return conta
+    else:
+        print("Erro: Usuário não encontrado.")
         return None
 
+def listar_contas(contas):
+    
+    print("\n======== Contas Cadastradas ========")
+    if not contas:
+        print("Nenhuma conta cadastrada.")
+        return
+    for conta in contas:
+        print(f"Agência: {conta['agencia']}")
+        print(f"Número da Conta: {conta['numero_conta']}")
+        print(f"Titular: {conta['usuario']['nome']}")
+        print("=" * 30)
 
-sistema = SistemaBancario()
+def main():
+   
+    saldo = 0
+    limite = 500
+    extrato = ""
+    numero_saques = 0
+    LIMITE_SAQUES = 3
+    usuarios = []
+    contas = []
+    AGENCIA = "0001"
 
+    while True:
+        menu = """
 
-sistema.criar_conta("João", 100)
-sistema.criar_conta("Maria", 500)
+        [d] Depositar
+        [s] Sacar
+        [e] Extrato
+        [nu] Novo usuário
+        [nc] Nova conta
+        [lc] Listar contas
+        [q] Sair
 
-while True:
-    print("\n======== Menu Principal ========")
-    print("[c] Criar nova conta")
-    print("[l] Listar contas")
-    print("[a] Acessar conta existente")
-    print("[q] Sair")
-    opcao_principal = input("=> ").lower()
+        => """
+        opcao = input(menu)
 
-    if opcao_principal == "c":
-        titular = input("Informe o nome do titular: ")
-        saldo_inicial = float(input("Informe o saldo inicial: "))
-        sistema.criar_conta(titular, saldo_inicial)
+        if opcao == "d":
+            valor = float(input("Informe o valor do depósito: "))
+            saldo, extrato = depositar(saldo, valor, extrato)
 
-    elif opcao_principal == "l":
-        sistema.listar_contas()
+        elif opcao == "s":
+            valor = float(input("Informe o valor do saque: "))
+            saldo, extrato, numero_saques = sacar(saldo, valor, extrato, limite, numero_saques, LIMITE_SAQUES)
 
-    elif opcao_principal == "a":
-        nome_titular = input("Informe o nome do titular da conta que deseja acessar: ")
-        conta_atual = sistema.selecionar_conta(nome_titular)
+        elif opcao == "e":
+            exibir_extrato(saldo, extrato)
 
-        if conta_atual:
-            menu_conta = """
+        elif opcao == "nu":
+            usuarios = criar_usuario(usuarios)
 
-            [d] Depositar
-            [s] Sacar
-            [e] Extrato
-            [v] Voltar ao menu principal
-            [q] Sair
+        elif opcao == "nc":
+            numero_conta = len(contas) + 1
+            conta = criar_conta(AGENCIA, numero_conta, usuarios)
+            if conta:
+                contas.append(conta)
 
-            => """
+        elif opcao == "lc":
+            listar_contas(contas)
 
-            while True:
-                opcao_conta = input(menu_conta).lower()
+        elif opcao == "q":
+            break
 
-                if opcao_conta == "d":
-                    valor = float(input("Informe o valor do depósito: "))
-                    conta_atual.depositar(valor)
+        else:
+            print("Operação inválida, por favor selecione novamente a operação desejada.")
 
-                elif opcao_conta == "s":
-                    valor = float(input("Informe o valor do saque: "))
-                    conta_atual.sacar(valor)
-
-                elif opcao_conta == "e":
-                    conta_atual.exibir_extrato()
-
-                elif opcao_conta == "v":
-                    break
-
-                elif opcao_conta == "q":
-                    print("Saindo do sistema.")
-                    exit()
-
-                else:
-                    print(
-                        "Operação inválida, por favor selecione novamente a operação desejada."
-                    )
-
-    elif opcao_principal == "q":
-        print("Saindo do sistema.")
-        break
-
-    else:
-        print("Operação inválida, por favor selecione novamente a operação desejada.")
+if __name__ == "__main__":
+    main()
